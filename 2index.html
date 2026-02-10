@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4KSJ ULTRA CINEMA</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dplayer@latest/dist/DPlayer.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        :root { --red: #e50914; --bg: #050505; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; }
+        .sidebar { height: 100vh; background: #000; position: fixed; width: 260px; border-right: 1px solid #222; overflow-y: auto; z-index: 1000; }
+        .main-content { margin-left: 260px; padding: 20px; }
+        .cat-item { padding: 12px 20px; cursor: pointer; border-bottom: 1px solid #111; color: #888; transition: 0.2s; }
+        .cat-item:hover, .cat-item.active { background: var(--red); color: #fff; }
+        .m-card { background: #111; border-radius: 8px; overflow: hidden; cursor: pointer; transition: 0.3s; border: 1px solid #222; }
+        .m-card:hover { transform: scale(1.03); border-color: var(--red); }
+        .m-card img { width: 100%; height: 180px; object-fit: cover; }
+        .m-info { padding: 8px; font-size: 12px; text-align: center; }
+        #player-overlay { display: none; position: fixed; inset: 0; background: #000; z-index: 9999; flex-direction: column; }
+        #dplayer { flex: 1; width: 100%; height: 100%; }
+        .p-top { padding: 10px; background: #0a0a0a; display: flex; justify-content: space-between; align-items: center; }
+        #login-scr { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; align-items: center; justify-content: center; }
+        .login-box { background: #111; padding: 30px; border-radius: 15px; width: 350px; border: 1px solid #333; }
+        @media (max-width: 768px) { .sidebar { width: 100%; height: 150px; position: relative; } .main-content { margin-left: 0; } }
+    </style>
+</head>
+<body>
+
+<div id="login-scr">
+    <div class="login-box text-center">
+        <h3 class="text-danger fw-bold mb-4">4KSJ LOGIN</h3>
+        <input type="text" id="user" class="form-control mb-2" placeholder="Username">
+        <input type="password" id="pass" class="form-control mb-3" placeholder="Password">
+        <button onclick="doLogin()" class="btn btn-danger w-100">LOGIN</button>
+    </div>
+</div>
+
+<div id="dashboard" style="display:none;">
+    <aside class="sidebar" id="categories"></aside>
+    <main class="main-content">
+        <div class="mb-4">
+            <button class="btn btn-danger btn-sm" onclick="fetchCats('get_live_categories')">LIVE TV</button>
+            <button class="btn btn-dark btn-sm" onclick="fetchCats('get_vod_categories')">MOVIES</button>
+        </div>
+        <div id="itemGrid" class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-3"></div>
+    </main>
+</div>
+
+<div id="player-overlay">
+    <div class="p-top">
+        <span id="vTitle" class="text-truncate">Playing...</span>
+        <button onclick="closePlayer()" class="btn btn-sm btn-danger">CLOSE X</button>
+    </div>
+    <div id="dplayer"></div>
+</div>
+
+<script>
+    const SERVER = "https://sjstorestar4k.store";
+    const PROXY = "https://api.allorigins.win/get?url=";
+    let U, P, dpInstance;
+
+    async function callApi(url) {
+        const response = await fetch(PROXY + encodeURIComponent(url));
+        const data = await response.json();
+        return JSON.parse(data.contents);
+    }
+
+    async function doLogin() {
+        U = document.getElementById('user').value;
+        P = document.getElementById('pass').value;
+        try {
+            const res = await callApi(`${SERVER}/player_api.php?username=${U}&password=${P}`);
+            if(res.user_info.auth === 1) {
+                document.getElementById('login-scr').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                fetchCats('get_live_categories');
+            } else { alert("Wrong Login!"); }
+        } catch(e) { alert("Server Error!"); }
+    }
+
+    async function fetchCats(action) {
+        const data = await callApi(`${SERVER}/player_api.php?username=${U}&password=${P}&action=${action}`);
+        const container = document.getElementById('categories');
+        container.innerHTML = '<div class="p-3 fw-bold border-bottom">FOLDERS</div>';
+        data.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'cat-item';
+            div.innerText = item.category_name;
+            div.onclick = () => fetchItems(action.replace('categories', 'streams'), item.category_id);
+            container.appendChild(div);
+        });
+    }
+
+    async function fetchItems(action, catId) {
+        const data = await callApi(`${SERVER}/player_api.php?username=${U}&password=${P}&action=${action}&category_id=${catId}`);
+        const grid = document.getElementById('itemGrid');
+        grid.innerHTML = '';
+        data.forEach(item => {
+            // Live streams usually use .ts but play better via HLS engine
+            const streamUrl = action.includes('live') 
+                ? `${SERVER}/live/${U}/${P}/${item.stream_id}.ts` 
+                : `${SERVER}/movie/${U}/${P}/${item.stream_id}.mp4`;
+            
+            const card = `
+                <div class="col">
+                    <div class="m-card" onclick="initPlayer('${streamUrl}', '${item.name.replace(/'/g, "")}', ${action.includes('live')})">
+                        <img src="${item.stream_icon || 'https://via.placeholder.com/200x300?text=No+Image'}" loading="lazy">
+                        <div class="m-info text-truncate">${item.name}</div>
+                    </div>
+                </div>`;
+            grid.innerHTML += card;
+        });
+    }
+
+    function initPlayer(url, title, isLive) {
+        document.getElementById('player-overlay').style.display = 'flex';
+        document.getElementById('vTitle').innerText = title;
+
+        if (dpInstance) dpInstance.destroy();
+
+        // High-level HLS configuration for Live Channels
+        dpInstance = new DPlayer({
+            container: document.getElementById('dplayer'),
+            live: isLive,
+            autoplay: true,
+            video: {
+                url: url,
+                type: isLive ? 'customHls' : 'normal',
+                customType: {
+                    customHls: function(video, player) {
+                        if (Hls.isSupported()) {
+                            const hls = new Hls({
+                                debug: false,
+                                enableWorker: true,
+                                lowLatencyMode: true,
+                            });
+                            hls.loadSource(video.src);
+                            hls.attachTo(video);
+                        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                            video.src = url;
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function closePlayer() {
+        if (dpInstance) { dpInstance.pause(); dpInstance.destroy(); }
+        document.getElementById('player-overlay').style.display = 'none';
+    }
+</script>
+</body>
+</html>
