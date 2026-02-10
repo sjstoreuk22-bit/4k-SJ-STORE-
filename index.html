@@ -3,274 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XTREME WEB PLAYER - Premium</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet" />
+    <title>4KSJ ULTRA CINEMA | GitHub Edition</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dplayer@latest/dist/DPlayer.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
-        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; }
-        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .gradient-text { background: linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        #player-container { display: none; }
+        :root { --red: #e50914; --bg: #080808; --card-bg: #141414; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; overflow-x: hidden; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #111; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--red); }
+
+        /* Sidebar */
+        .sidebar { height: 100vh; background: #000; position: fixed; width: 260px; border-right: 1px solid #222; overflow-y: auto; z-index: 1000; transition: 0.3s; }
+        .main-content { margin-left: 260px; padding: 25px; min-height: 100vh; transition: 0.3s; }
+        
+        .cat-item { padding: 12px 20px; cursor: pointer; border-bottom: 1px solid #111; color: #aaa; font-size: 14px; transition: 0.2s; }
+        .cat-item:hover, .cat-item.active { background: rgba(229, 9, 20, 0.1); color: var(--red); border-left: 4px solid var(--red); }
+
+        /* Cards Styling */
+        .m-card { background: var(--card-bg); border-radius: 8px; overflow: hidden; cursor: pointer; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); position: relative; border: 1px solid transparent; height: 100%; }
+        .m-card:hover { transform: scale(1.05); border-color: var(--red); z-index: 2; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .m-card img { width: 100%; height: 280px; object-fit: cover; background: #222; }
+        .m-info { padding: 12px; font-size: 13px; font-weight: 600; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Search & Controls */
+        .controls-bar { position: sticky; top: 0; background: var(--bg); z-index: 900; padding: 10px 0; margin-bottom: 20px; border-bottom: 1px solid #222; }
+        .search-input { background: #1a1a1a !important; border: 1px solid #333 !important; color: white !important; border-radius: 20px !important; }
+
+        /* Player Overlay */
+        #player-overlay { display: none; position: fixed; inset: 0; background: #000; z-index: 9999; flex-direction: column; }
+        .p-top { padding: 15px 25px; background: #0a0a0a; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; }
+        #dplayer { flex: 1; width: 100%; }
+        
+        /* Login Form */
+        #login-scr { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; align-items: center; justify-content: center; background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://assets.nflxext.com/ffe/siteui/vlv3/f841d4c7-10e1-40af-bca1-07e3f8eb14af/8a304529-11fa-4579-976a-392269aa5f1c/IN-en-20220502-popsignuptwoweeks-perspective_alpha_website_medium.jpg'); background-size: cover; }
+        .login-box { background: rgba(0, 0, 0, 0.85); padding: 50px; border-radius: 8px; width: 100%; max-width: 400px; }
+        
+        @media (max-width: 768px) {
+            .sidebar { width: 100%; height: auto; max-height: 200px; position: relative; }
+            .main-content { margin-left: 0; }
+            .m-card img { height: 200px; }
+        }
     </style>
 </head>
 <body>
 
-    <div id="login-page" class="flex items-center justify-center min-h-screen">
-        <div class="glass p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
-            <h1 class="text-4xl font-bold mb-6 gradient-text">XTREME PLAYER</h1>
-            <p class="mb-6 text-gray-400">Please enter your credentials to access server</p>
-            <input type="text" id="username" placeholder="Username" class="w-full p-3 mb-4 rounded bg-gray-800 border border-gray-700 focus:outline-none focus:border-blue-500">
-            <input type="password" id="password" placeholder="Password" class="w-full p-3 mb-6 rounded bg-gray-800 border border-gray-700 focus:outline-none focus:border-blue-500">
-            <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-bold transition">LOGIN NOW</button>
+<div id="login-scr">
+    <div class="login-box">
+        <h1 class="text-danger fw-bold text-center mb-4">4KSJ CINEMA</h1>
+        <div class="mb-3">
+            <input type="text" id="user" class="form-control form-control-lg search-input" placeholder="Username">
         </div>
+        <div class="mb-4">
+            <input type="password" id="pass" class="form-control form-control-lg search-input" placeholder="Password">
+        </div>
+        <button onclick="doLogin()" id="loginBtn" class="btn btn-danger w-100 fw-bold py-3">SIGN IN</button>
+        <p class="text-muted mt-3 text-center small">Enter your credentials to access the 4K stream server.</p>
     </div>
+</div>
 
-    <div id="main-dashboard" class="hidden min-h-screen">
-        <nav class="glass flex justify-between items-center p-4 sticky top-0 z-50">
-            <h2 class="text-2xl font-bold gradient-text">XTREME WEB</h2>
-            <div class="space-x-4">
-                <button onclick="showSection('live')" class="hover:text-blue-400">Live TV</button>
-                <button onclick="showSection('movies')" class="hover:text-blue-400">Movies</button>
-                <button onclick="showSection('series')" class="hover:text-blue-400">Series</button>
-                <button onclick="location.reload()" class="text-red-500 font-bold">Logout</button>
+<div id="dashboard" style="display:none;">
+    <aside class="sidebar" id="categories"></aside>
+    
+    <main class="main-content">
+        <div class="controls-bar d-flex flex-wrap gap-3 align-items-center justify-content-between">
+            <div class="d-flex gap-2">
+                <button id="btn-live" class="btn btn-danger px-4" onclick="fetchCats('get_live_categories')">LIVE TV</button>
+                <button id="btn-vod" class="btn btn-outline-light px-4" onclick="fetchCats('get_vod_categories')">MOVIES</button>
             </div>
-        </nav>
-
-        <div id="player-section" class="p-4 flex flex-col items-center hidden">
-            <div class="w-full max-w-4xl">
-                <video id="my-video" class="video-js vjs-big-play-centered w-full h-64 md:h-96 rounded-lg" controls preload="auto" data-setup='{}'></video>
-                <button onclick="closePlayer()" class="mt-4 text-sm text-gray-400 hover:text-white">✕ Close Player</button>
+            <div class="flex-grow-1 mx-md-4">
+                <input type="text" id="searchBar" class="form-control search-input" placeholder="Search for channels or movies..." onkeyup="filterItems()">
             </div>
         </div>
+        
+        <div id="itemGrid" class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-4">
+            </div>
+    </main>
+</div>
 
-        <div class="p-6">
-            <h3 id="section-title" class="text-2xl mb-6 border-l-4 border-blue-500 pl-3">Live Channels</h3>
-            <div id="content-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                </div>
+<div id="player-overlay">
+    <div class="p-top">
+        <h5 id="vTitle" class="m-0 text-truncate">Stream Player</h5>
+        <button onclick="closePlayer()" class="btn btn-outline-light btn-sm rounded-circle"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="dplayer"></div>
+    <div class="p-3 text-center bg-dark">
+        <div class="btn-group">
+            <a id="vlcBtn" class="btn btn-warning btn-sm fw-bold mx-1 rounded">VLC PLAYER</a>
+            <a id="mxBtn" class="btn btn-primary btn-sm fw-bold mx-1 rounded">MX PLAYER</a>
         </div>
     </div>
+</div>
 
-    <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
-    <script>
-        // Dummy Content (Aap yahan apni API link kar sakte hain)
-        const data = {
-            live: [{ title: "Sports HD", url: "YOUR_M3U8_URL_HERE", img: "https://via.placeholder.com/150/000/fff?text=Live+TV" }],
-            movies: [{ title: "Action Movie 1", url: "MOVIE_URL_HERE", img: "https://via.placeholder.com/150/222/fff?text=Movie" }],
-            series: [{ title: "Best Series S1", url: "SERIES_URL_HERE", img: "https://via.placeholder.com/150/444/fff?text=Series" }]
-        };
+<script>
+    // Configuration - GitHub par host karte waqt isse badal sakte hain
+    const CONFIG = {
+        SERVER: "https://sjstorestar4k.store",
+        PROXY: "https://api.allorigins.win/get?url=",
+        DEFAULT_POSTER: "https://via.placeholder.com/300x450?text=No+Poster"
+    };
 
-        function login() {
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
+    let U, P, dpInstance, currentItems = [];
 
-            // Simple check (Aap isko change kar sakte hain)
-            if(user === "admin" && pass === "1234") {
-                document.getElementById('login-page').classList.add('hidden');
-                document.getElementById('main-dashboard').classList.remove('hidden');
-                showSection('live');
-            } else {
-                alert("Galat password ya username!");
-            }
+    async function callApi(url) {
+        try {
+            const response = await fetch(CONFIG.PROXY + encodeURIComponent(url));
+            const data = await response.json();
+            return JSON.parse(data.contents);
+        } catch (err) {
+            console.error("API Error:", err);
+            return null;
+        }
+    }
+
+    async function doLogin() {
+        const btn = document.getElementById('loginBtn');
+        U = document.getElementById('user').value;
+        P = document.getElementById('pass').value;
+
+        if(!U || !P) return alert("Please fill all fields");
+        
+        btn.innerText = "CONNECTING...";
+        const res = await callApi(`${CONFIG.SERVER}/player_api.php?username=${U}&password=${P}`);
+        
+        if(res && res.user_info && res.user_info.auth === 1) {
+            document.getElementById('login-scr').style.fadeOut = 300;
+            setTimeout(() => {
+                document.getElementById('login-scr').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                fetchCats('get_live_categories');
+            }, 300);
+        } else {
+            alert("Login Failed! Check credentials.");
+            btn.innerText = "ACCESS SERVER";
+        }
+    }
+
+    async function fetchCats(action) {
+        // Toggle Active Button UI
+        if(action.includes('live')) {
+            document.getElementById('btn-live').className = 'btn btn-danger px-4';
+            document.getElementById('btn-vod').className = 'btn btn-outline-light px-4';
+        } else {
+            document.getElementById('btn-live').className = 'btn btn-outline-light px-4';
+            document.getElementById('btn-vod').className = 'btn btn-danger px-4';
         }
 
-        function showSection(type) {
-            const grid = document.getElementById('content-grid');
-            const title = document.getElementById('section-title');
-            title.innerText = type.toUpperCase();
-            grid.innerHTML = '';
+        const data = await callApi(`${CONFIG.SERVER}/player_api.php?username=${U}&password=${P}&action=${action}`);
+        const container = document.getElementById('categories');
+        container.innerHTML = '<div class="p-4 fw-bold text-white-50 small uppercase">MENU NAVIGATION</div>';
+        
+        if(!data) return;
 
-            data[type].forEach(item => {
-                grid.innerHTML += `
-                    <div class="glass p-2 rounded-xl cursor-pointer hover:scale-105 transition transform" onclick="playVideo('${item.url}')">
-                        <img src="${item.img}" class="rounded-lg mb-2 w-full">
-                        <p class="text-center font-medium">${item.title}</p>
-                    </div>
-                `;
-            });
-        }
+        data.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'cat-item';
+            div.innerHTML = `<i class="fas fa-folder me-2 shadow-sm"></i> ${item.category_name}`;
+            div.onclick = () => {
+                document.querySelectorAll('.cat-item').forEach(el => el.classList.remove('active'));
+                div.classList.add('active');
+                fetchItems(action.replace('categories', 'streams'), item.category_id);
+            };
+            container.appendChild(div);
+        });
+    }
 
-        function playVideo(url) {
-            const playerSection = document.getElementById('player-section');
-            playerSection.classList.remove('hidden');
-            const player = videojs('my-video');
-            player.src({ type: 'application/x-mpegURL', src: url });
-            player.play();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+    async function fetchItems(action, catId) {
+        const grid = document.getElementById('itemGrid');
+        grid.innerHTML = '<div class="text-center w-100 p-5"><div class="spinner-border text-danger"></div></div>';
+        
+        const data = await callApi(`${CONFIG.SERVER}/player_api.php?username=${U}&password=${P}&action=${action}&category_id=${catId}`);
+        currentItems = data || [];
+        renderGrid(currentItems, action);
+    }
 
-        function closePlayer() {
-            const player = videojs('my-video');
-            player.pause();
-            document.getElementById('player-section').classList.add('hidden');
-        }
-    </script>
-</body>
-</html>
-                return;
-            }
-
-            status.style.color = "#ffcc00";
-            status.innerText = "Connecting to 4KSJ Server...";
-            btn.disabled = true;
-
-            // Aapka Server URL
-            const serverUrl = "http://4ksj.store:8080";
+    function renderGrid(items, action) {
+        const grid = document.getElementById('itemGrid');
+        grid.innerHTML = '';
+        
+        items.forEach(item => {
+            const isLive = action.includes('live');
+            const streamUrl = isLive 
+                ? `${CONFIG.SERVER}/live/${U}/${P}/${item.stream_id}.ts` 
+                : `${CONFIG.SERVER}/movie/${U}/${P}/${item.stream_id}.mp4`;
             
-            // CORS Proxy (GitHub se HTTP server connect karne ke liye)
-            const proxy = "https://corsproxy.io/?";
-            
-            const finalUrl = `${proxy}${encodeURIComponent(serverUrl + '/player_api.php?username=' + user + '&password=' + pass)}`;
+            const poster = item.stream_icon || item.cover || CONFIG.DEFAULT_POSTER;
+            const cleanTitle = item.name.replace(/'/g, "");
 
-            try {
-                const response = await fetch(finalUrl);
-                const data = await response.json();
+            const card = document.createElement('div');
+            card.className = 'col';
+            card.innerHTML = `
+                <div class="m-card" onclick="initPlayer('${streamUrl}', '${cleanTitle}', ${isLive})">
+                    <img src="${poster}" onerror="this.src='${CONFIG.DEFAULT_POSTER}'" loading="lazy">
+                    <div class="m-info">${item.name}</div>
+                </div>`;
+            grid.appendChild(card);
+        });
+    }
 
-                if (data.user_info && data.user_info.auth === 1) {
-                    status.style.color = "#00ff00";
-                    status.innerText = "Login Success! Welcome " + user;
-                    // Login ke baad kahan jana hai, wo link yahan dalen:
-                    // window.location.href = "dashboard.html"; 
-                } else {
-                    status.style.color = "#ff4444";
-                    status.innerText = "Wrong Username or Password!";
-                    btn.disabled = false;
+    function filterItems() {
+        const query = document.getElementById('searchBar').value.toLowerCase();
+        const cards = document.querySelectorAll('.col');
+        cards.forEach(card => {
+            const title = card.querySelector('.m-info').innerText.toLowerCase();
+            card.style.display = title.includes(query) ? 'block' : 'none';
+        });
+    }
+
+    function initPlayer(url, title, isLive) {
+        document.getElementById('player-overlay').style.display = 'flex';
+        document.getElementById('vTitle').innerText = title;
+        
+        // External Intents
+        document.getElementById('vlcBtn').href = `vlc://${url}`;
+        document.getElementById('mxBtn').href = `intent://${url.replace(/^https?:\/\//, "")}#Intent;scheme=https;package=com.mxtech.videoplayer.ad;S.title=${title};end`;
+
+        if (dpInstance) dpInstance.destroy();
+        
+        dpInstance = new DPlayer({
+            container: document.getElementById('dplayer'),
+            live: isLive,
+            autoplay: true,
+            theme: '#e50914',
+            video: {
+                url: url,
+                type: isLive ? 'hls' : 'auto',
+                customType: {
+                    hls: function(video) {
+                        if (Hls.isSupported()) {
+                            const hls = new Hls();
+                            hls.loadSource(video.src);
+                            hls.attachTo(video);
+                        }
+                    }
                 }
-            } catch (error) {
-                status.style.color = "#ff4444";
-                status.innerText = "Server Error! Please try again later.";
-                console.error("Error:", error);
-                btn.disabled = false;
             }
-        }
-    </script>
-</body>
-</html>
-                return;
-            }
+        });
+    }
 
-            status.style.color = "#ffcc00";
-            status.innerText = "Connecting to 4KSJ Server...";
-            btn.disabled = true;
+    function closePlayer() {
+        if (dpInstance) dpInstance.pause();
+        document.getElementById('player-overlay').style.display = 'none';
+    }
+</script>
 
-            // Aapka Server URL
-            const serverUrl = "http://4ksj.store:8080";
-            
-            // CORS Proxy (GitHub se HTTP server connect karne ke liye)
-            const proxy = "https://corsproxy.io/?";
-            
-            const finalUrl = `${proxy}${encodeURIComponent(serverUrl + '/player_api.php?username=' + user + '&password=' + pass)}`;
-
-            try {
-                const response = await fetch(finalUrl);
-                const data = await response.json();
-
-                if (data.user_info && data.user_info.auth === 1) {
-                    status.style.color = "#00ff00";
-                    status.innerText = "Login Success! Welcome " + user;
-                    // Login ke baad kahan jana hai, wo link yahan dalen:
-                    // window.location.href = "dashboard.html"; 
-                } else {
-                    status.style.color = "#ff4444";
-                    status.innerText = "Wrong Username or Password!";
-                    btn.disabled = false;
-                }
-            } catch (error) {
-                status.style.color = "#ff4444";
-                status.innerText = "Server Error! Please try again later.";
-                console.error("Error:", error);
-                btn.disabled = false;
-            }
-        }
-    </script>
-</body>
-</html>
-        #player-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.98); display: none; align-items: center; justify-content: center; z-index: 9999; }
-        .player-container { width: 90%; max-width: 1000px; position: relative; }
-        .close-p { position: absolute; top: -50px; right: 0; font-size: 40px; color: white; cursor: pointer; }
-    </style>
-</head>
-<body>
-
-    <div id="login-box">
-        <div class="glass-card">
-            <h1>4KSJ PREMIUM</h1>
-            <input type="text" id="usr" placeholder="Username">
-            <input type="password" id="pwd" placeholder="Password">
-            <button class="login-btn" onclick="ott.init()">SIGN IN</button>
-            <p id="msg" style="color: #888; font-size: 12px; margin-top: 15px;">Secure Xtream Codes Access</p>
-        </div>
-    </div>
-
-    <div id="dashboard">
-        <div class="top-nav">
-            <h2>OTT PRO</h2>
-            <div class="nav-link active" onclick="ott.load('get_live_streams')">LIVE TV</div>
-            <div class="nav-link" onclick="ott.load('get_vod_streams')">MOVIES</div>
-            <div class="nav-link" onclick="ott.load('get_series')">SERIES</div>
-        </div>
-        <div class="content-area">
-            <div id="grid" class="movie-grid"></div>
-        </div>
-    </div>
-
-    <div id="player-modal">
-        <div class="player-container">
-            <span class="close-p" onclick="ott.stop()">&times;</span>
-            <video id="p" class="video-js vjs-16-9 vjs-big-play-centered" controls></video>
-        </div>
-    </div>
-
-    <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
-    <script>
-        const ott = {
-            h: "http://4ksj.store:8080",
-            pr: "https://api.allorigins.win/get?url=",
-            u: "", p: "", v: null,
-
-            init: function() {
-                this.u = document.getElementById('usr').value;
-                this.p = document.getElementById('pwd').value;
-                if(!this.u || !this.p) return alert("Details Enter Karein!");
-                document.getElementById('msg').innerText = "Loading Next Level UI...";
-                this.load('get_live_streams');
-                this.v = videojs('p');
-            },
-
-            async load(act) {
-                const url = `${this.h}/player_api.php?username=${this.u}&password=${this.p}&action=${act}`;
-                try {
-                    const res = await fetch(this.pr + encodeURIComponent(url));
-                    const d = await res.json();
-                    const list = JSON.parse(d.contents);
-                    
-                    document.getElementById('login-box').style.display = 'none';
-                    document.getElementById('dashboard').style.display = 'block';
-                    const g = document.getElementById('grid');
-                    g.innerHTML = "";
-
-                    (Array.isArray(list) ? list : []).slice(0, 80).forEach(i => {
-                        const div = document.createElement('div');
-                        div.className = 'movie-card';
-                        const img = i.stream_icon || i.series_cover || 'https://via.placeholder.com/200x300?text=No+Poster';
-                        div.innerHTML = `<img src="${img}"><div class="info">${i.name}</div>`;
-                        div.onclick = () => this.play(i, act);
-                        g.appendChild(div);
-                    });
-                } catch(e) { alert("Server Error ya Wrong Login!"); }
-            },
-
-            play(i, act) {
-                let s = "";
-                if(act === 'get_live_streams') s = `${this.h}/live/${this.u}/${this.p}/${i.stream_id}.m3u8`;
-                else s = `${this.h}/movie/${this.u}/${this.p}/${i.stream_id}.${i.container_extension || 'mp4'}`;
-                
-                document.getElementById('player-modal').style.display = 'flex';
-                this.v.src({src: s, type: act==='get_live_streams'?'application/x-mpegURL':'video/mp4'});
-                this.v.play();
-            },
-
-            stop() { this.v.pause(); document.getElementById('player-modal').style.display = 'none'; }
-        };
-    </script>
 </body>
 </html>
