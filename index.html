@@ -73,6 +73,45 @@
     </script>
 </body>
 </html>
+                return;
+            }
+
+            status.style.color = "#ffcc00";
+            status.innerText = "Connecting to 4KSJ Server...";
+            btn.disabled = true;
+
+            // Aapka Server URL
+            const serverUrl = "http://4ksj.store:8080";
+            
+            // CORS Proxy (GitHub se HTTP server connect karne ke liye)
+            const proxy = "https://corsproxy.io/?";
+            
+            const finalUrl = `${proxy}${encodeURIComponent(serverUrl + '/player_api.php?username=' + user + '&password=' + pass)}`;
+
+            try {
+                const response = await fetch(finalUrl);
+                const data = await response.json();
+
+                if (data.user_info && data.user_info.auth === 1) {
+                    status.style.color = "#00ff00";
+                    status.innerText = "Login Success! Welcome " + user;
+                    // Login ke baad kahan jana hai, wo link yahan dalen:
+                    // window.location.href = "dashboard.html"; 
+                } else {
+                    status.style.color = "#ff4444";
+                    status.innerText = "Wrong Username or Password!";
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                status.style.color = "#ff4444";
+                status.innerText = "Server Error! Please try again later.";
+                console.error("Error:", error);
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
         #player-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.98); display: none; align-items: center; justify-content: center; z-index: 9999; }
         .player-container { width: 90%; max-width: 1000px; position: relative; }
         .close-p { position: absolute; top: -50px; right: 0; font-size: 40px; color: white; cursor: pointer; }
