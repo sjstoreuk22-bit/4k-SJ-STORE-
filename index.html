@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ULTIMATE OTT PLAYER</title>
+    <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        :root { --main-red: #E50914; --dark-bg: #000; --card-shadow: 0 8px 15px rgba(0,0,0,0.5); }
+        body { margin: 0; background: var(--dark-bg); color: white; font-family: 'Roboto', sans-serif; }
+        
+        /* Premium Login Layout */
+        #login-box { height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://source.unsplash.com/1600x900/?cinema,dark'); background-size: cover; }
+        .glass-card { background: rgba(0,0,0,0.85); padding: 50px; border-radius: 15px; border: 1px solid #333; text-align: center; width: 350px; box-shadow: var(--card-shadow); }
+        .glass-card h1 { color: var(--main-red); font-family: 'Oswald', sans-serif; font-size: 32px; margin-bottom: 20px; }
+        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 5px; border: none; background: #333; color: white; outline: none; }
+        .login-btn { width: 100%; padding: 15px; background: var(--main-red); color: white; border: none; font-weight: bold; border-radius: 5px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .login-btn:hover { background: #ff0000; transform: scale(1.02); }
+
+        /* Dashboard View */
+        #dashboard { display: none; }
+        .top-nav { display: flex; align-items: center; padding: 15px 5%; background: rgba(0,0,0,0.9); position: sticky; top: 0; z-index: 1000; border-bottom: 2px solid var(--main-red); }
+        .top-nav h2 { color: var(--main-red); font-family: 'Oswald', sans-serif; margin-right: 40px; }
+        .nav-link { margin-right: 25px; cursor: pointer; color: #bbb; font-weight: bold; transition: 0.3s; }
+        .nav-link:hover, .nav-link.active { color: white; text-shadow: 0 0 10px var(--main-red); }
+
+        /* Grid UI */
+        .content-area { padding: 30px 5%; }
+        .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 25px; }
+        .movie-card { position: relative; border-radius: 10px; overflow: hidden; transition: 0.4s; cursor: pointer; border: 1px solid #222; }
+        .movie-card:hover { transform: scale(1.1); z-index: 5; border-color: var(--main-red); box-shadow: 0 0 20px rgba(229, 9, 20, 0.4); }
+        .movie-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; }
+        .movie-card .info { padding: 10px; font-size: 13px; text-align: center; background: rgba(0,0,0,0.8); }
+
+        /* Video Player Modal */
+        #player-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.98); display: none; align-items: center; justify-content: center; z-index: 9999; }
+        .player-container { width: 90%; max-width: 1000px; position: relative; }
+        .close-p { position: absolute; top: -50px; right: 0; font-size: 40px; color: white; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div id="login-box">
+        <div class="glass-card">
+            <h1>4KSJ PREMIUM</h1>
+            <input type="text" id="usr" placeholder="Username">
+            <input type="password" id="pwd" placeholder="Password">
+            <button class="login-btn" onclick="ott.init()">SIGN IN</button>
+            <p id="msg" style="color: #888; font-size: 12px; margin-top: 15px;">Secure Xtream Codes Access</p>
+        </div>
+    </div>
+
+    <div id="dashboard">
+        <div class="top-nav">
+            <h2>OTT PRO</h2>
+            <div class="nav-link active" onclick="ott.load('get_live_streams')">LIVE TV</div>
+            <div class="nav-link" onclick="ott.load('get_vod_streams')">MOVIES</div>
+            <div class="nav-link" onclick="ott.load('get_series')">SERIES</div>
+        </div>
+        <div class="content-area">
+            <div id="grid" class="movie-grid"></div>
+        </div>
+    </div>
+
+    <div id="player-modal">
+        <div class="player-container">
+            <span class="close-p" onclick="ott.stop()">&times;</span>
+            <video id="p" class="video-js vjs-16-9 vjs-big-play-centered" controls></video>
+        </div>
+    </div>
+
+    <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
+    <script>
+        const ott = {
+            h: "http://4ksj.store:8080",
+            pr: "https://api.allorigins.win/get?url=",
+            u: "", p: "", v: null,
+
+            init: function() {
+                this.u = document.getElementById('usr').value;
+                this.p = document.getElementById('pwd').value;
+                if(!this.u || !this.p) return alert("Details Enter Karein!");
+                document.getElementById('msg').innerText = "Loading Next Level UI...";
+                this.load('get_live_streams');
+                this.v = videojs('p');
+            },
+
+            async load(act) {
+                const url = `${this.h}/player_api.php?username=${this.u}&password=${this.p}&action=${act}`;
+                try {
+                    const res = await fetch(this.pr + encodeURIComponent(url));
+                    const d = await res.json();
+                    const list = JSON.parse(d.contents);
+                    
+                    document.getElementById('login-box').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'block';
+                    const g = document.getElementById('grid');
+                    g.innerHTML = "";
+
+                    (Array.isArray(list) ? list : []).slice(0, 80).forEach(i => {
+                        const div = document.createElement('div');
+                        div.className = 'movie-card';
+                        const img = i.stream_icon || i.series_cover || 'https://via.placeholder.com/200x300?text=No+Poster';
+                        div.innerHTML = `<img src="${img}"><div class="info">${i.name}</div>`;
+                        div.onclick = () => this.play(i, act);
+                        g.appendChild(div);
+                    });
+                } catch(e) { alert("Server Error ya Wrong Login!"); }
+            },
+
+            play(i, act) {
+                let s = "";
+                if(act === 'get_live_streams') s = `${this.h}/live/${this.u}/${this.p}/${i.stream_id}.m3u8`;
+                else s = `${this.h}/movie/${this.u}/${this.p}/${i.stream_id}.${i.container_extension || 'mp4'}`;
+                
+                document.getElementById('player-modal').style.display = 'flex';
+                this.v.src({src: s, type: act==='get_live_streams'?'application/x-mpegURL':'video/mp4'});
+                this.v.play();
+            },
+
+            stop() { this.v.pause(); document.getElementById('player-modal').style.display = 'none'; }
+        };
+    </script>
+</body>
+</html>
