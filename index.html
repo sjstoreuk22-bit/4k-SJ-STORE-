@@ -3,37 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4KSJ ULTRA CINEMA | GitHub Edition</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dplayer@latest/dist/DPlayer.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
+    <title>High-Speed IPTV Stream</title>
+    <script src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
     <style>
-        :root { --red: #e50914; --bg: #080808; --card-bg: #141414; }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; overflow-x: hidden; }
-        
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #111; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--red); }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #player {
+            width: 100%;
+            height: 100%;
+            max-width: 1000px;
+            aspect-ratio: 16 / 9;
+        }
+        .info-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            background: rgba(0,0,0,0.5);
+            padding: 5px 10px;
+            border-radius: 4px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
 
-        /* Sidebar */
-        .sidebar { height: 100vh; background: #000; position: fixed; width: 260px; border-right: 1px solid #222; overflow-y: auto; z-index: 1000; transition: 0.3s; }
-        .main-content { margin-left: 260px; padding: 25px; min-height: 100vh; transition: 0.3s; }
-        
-        .cat-item { padding: 12px 20px; cursor: pointer; border-bottom: 1px solid #111; color: #aaa; font-size: 14px; transition: 0.2s; }
-        .cat-item:hover, .cat-item.active { background: rgba(229, 9, 20, 0.1); color: var(--red); border-left: 4px solid var(--red); }
+<div class="info-overlay">● LIVE PROXY ACTIVE | 1Gbps PORT</div>
+<div id="player"></div>
 
-        /* Cards Styling */
-        .m-card { background: var(--card-bg); border-radius: 8px; overflow: hidden; cursor: pointer; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); position: relative; border: 1px solid transparent; height: 100%; }
-        .m-card:hover { transform: scale(1.05); border-color: var(--red); z-index: 2; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
-        .m-card img { width: 100%; height: 280px; object-fit: cover; background: #222; }
-        .m-info { padding: 12px; font-size: 13px; font-weight: 600; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+<script>
+    // Replace this with your Server Proxy URL
+    var streamURL = 'https://xtv.ooo/0067804946/4761032132/167574';
 
-        /* Search & Controls */
+    var player = new Clappr.Player({
+        source: streamURL,
+        parentId: "#player",
+        autoPlay: true,
+        width: '100%',
+        height: '100%',
+        mediacontrol: {seekbar: "#00ff00", buttons: "#00ff00"},
+        playback: {
+            hlsjsConfig: {
+                enableWorker: true
+            }
+        },
+        // Error handling for auto-reconnect
+        events: {
+            onError: function(e) {
+                console.log("Stream Error. Retrying...");
+                setTimeout(function() {
+                    player.load(streamURL);
+                    player.play();
+                }, 3000);
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
         .controls-bar { position: sticky; top: 0; background: var(--bg); z-index: 900; padding: 10px 0; margin-bottom: 20px; border-bottom: 1px solid #222; }
         .search-input { background: #1a1a1a !important; border: 1px solid #333 !important; color: white !important; border-radius: 20px !important; }
 
